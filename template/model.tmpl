@@ -1,0 +1,25 @@
+package {{.ModelName}}
+
+import (
+    xorm "github.com/laixyz/xormplus"
+	{{range .Imports}}"{{.}}"{{end}}
+)
+
+{{range .Tables}}
+type {{TableMapper .Name}} struct {
+    Model `xorm:"-" json:"-"`
+{{$table := .}}
+{{range .ColumnsSeq}}{{$col := $table.GetColumn .}}	{{ColumnMapper $col.Name}}	{{Type $col}} `{{Tag $table $col}}`
+{{end}}
+}
+
+func (m *{{TableMapper .Name}}) TableName() string {
+	return "`{{$table.Name}}`"
+}
+
+func New{{TableMapper .Name}}(session *xorm.Session) *{{TableMapper .Name}} {
+	var m {{TableMapper .Name}}
+	m.SessionInit(session, &m)
+	return &m
+}
+{{end}}

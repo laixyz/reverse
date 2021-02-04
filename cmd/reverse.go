@@ -7,12 +7,12 @@ package cmd
 import (
 	"bytes"
 	"errors"
-	"html/template"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
 
 	"github.com/laixyz/reverse/language"
 
@@ -56,18 +56,19 @@ type ReverseSource struct {
 
 // ReverseTarget represents a reverse target
 type ReverseTarget struct {
-	Type          string   `yaml:"type"`
-	IncludeTables []string `yaml:"include_tables"`
-	ExcludeTables []string `yaml:"exclude_tables"`
-	TableMapper   string   `yaml:"table_mapper"`
-	ColumnMapper  string   `yaml:"column_mapper"`
-	TemplatePath  string   `yaml:"template_path"`
-	Template      string   `yaml:"template"`
-	MultipleFiles bool     `yaml:"multiple_files"`
-	OutputDir     string   `yaml:"output_dir"`
-	TablePrefix   string   `yaml:"table_prefix"`
-	Language      string   `yaml:"language"`
-	TableName     bool     `yaml:"table_name"`
+	Type              string   `yaml:"type"`
+	IncludeTables     []string `yaml:"include_tables"`
+	ExcludeTables     []string `yaml:"exclude_tables"`
+	TableMapper       string   `yaml:"table_mapper"`
+	ColumnMapper      string   `yaml:"column_mapper"`
+	TemplatePath      string   `yaml:"template_path"`
+	ModelTemplatePath string   `yaml:"model_template_path"`
+	Template          string   `yaml:"template"`
+	MultipleFiles     bool     `yaml:"multiple_files"`
+	OutputDir         string   `yaml:"output_dir"`
+	TablePrefix       string   `yaml:"table_prefix"`
+	Language          string   `yaml:"language"`
+	TableName         bool     `yaml:"table_name"`
 
 	Funcs     map[string]string `yaml:"funcs"`
 	Formatter string            `yaml:"formatter"`
@@ -328,6 +329,10 @@ func runReverse(source *ReverseSource, target *ReverseTarget) error {
 			w.WriteString(source)
 			w.Close()
 		}
+
+	}
+	if target.ModelTemplatePath != "" {
+		return ModelCodeFileCreate(target.ModelTemplatePath, target.OutputDir)
 	}
 
 	return nil
@@ -344,4 +349,49 @@ func GetPackageName(Path string) (string, error) {
 		}
 	}
 	return "", err
+}
+
+//
+func ModelCodeFileCreate(templatePath, targePath string) error {
+	ModelName, err := GetPackageName(targePath)
+	if err != nil {
+		return err
+	}
+	bs, err := ioutil.ReadFile(templatePath)
+	if err != nil {
+		return err
+	}
+
+	t := template.New("model_base")
+
+	tmpl, err := t.Parse(string(bs))
+	if err != nil {
+		return err
+	}
+
+	w, err := os.Create(filepath.Join(targePath, "model_base.go"))
+	if err != nil {
+		return err
+	}
+	defer w.Close()
+
+	newbytes := bytes.NewBufferString("")
+	err = tmpl.Execute(newbytes, map[string]interface{}{
+		"ModelName": ModelName,
+	})
+	if err != nil {
+		return err
+	}
+
+	tplcontent, err := ioutil.ReadAll(newbytes)
+	if err != nil {
+		return err
+	}
+	var source string
+
+	source = string(tplcontent)
+
+	w.WriteString(source)
+	w.Close()
+	return nil
 }

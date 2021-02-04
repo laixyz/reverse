@@ -1,0 +1,17 @@
+kind: reverse
+name: model
+source:
+  database: mysql
+  conn_str: 'test:test@(127.0.0.1:3306)/test?charset=utf8mb4&parseTime=True&loc=Local'
+targets:
+  - type: codes
+    #include_tables: # 包含的表，以下可以用 **
+    #  - **
+    table_mapper: gonic # 表名到代码类或结构体的映射关系
+    column_mapper: gonic # 字段名到代码或结构体成员的映射关系
+    #table_prefix: "fog_"
+    multiple_files: true
+    language: golang
+    template_path: ./template/model.tmpl
+    model_template_path: ./template/modelcode.tmpl
+    output_dir: ../model
