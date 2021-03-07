@@ -22,4 +22,12 @@ func New{{TableMapper .Name}}(session *xorm.Session) *{{TableMapper .Name}} {
 	m.SessionInit(session, &m)
 	return &m
 }
+
+func (m *{{TableMapper .Name}}) Update() (int64, error) {
+	return m.session.Update(m)
+}
+func (m *{{TableMapper .Name}}) Save() (int64, error) {
+	return m.session.Insert(m)
+}
+
 {{end}}

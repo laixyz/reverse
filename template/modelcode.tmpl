@@ -98,17 +98,12 @@ func (m *Model) FilterID(id interface{}) *Model {
 	return m
 }
 
-func (m *Model) Update() (int64, error) {
-	return m.session.Update(m)
-}
 
 func (m *Model) LastSQL() (string, []interface{}) {
 	return m.session.LastSQL()
 }
 
-func (m *Model) Save() (int64, error) {
-	return m.session.Insert(m)
-}
+
 
 func (m *Model) Delete(bean interface{}) (int64, error) {
 	return m.session.Delete(bean)
